@@ -27,7 +27,7 @@ if __name__ == "__main__":
 	model = keras.Sequential([
 		keras.layers.Conv2D(3, (5,5), strides=(1,1), padding="valid", activation="relu", input_shape=input_shape),
 		keras.layers.MaxPooling2D((2,2)),
-		keras.layers.Conv2D(3, (3,3), strides=(1,1), padding="valid", activation="relu"),
+		keras.layers.Conv2D(3, (3,3), strides=(1,1), padding="same", activation="relu"),
 		keras.layers.MaxPooling2D((2,2)),
 		keras.layers.Flatten(),
 		keras.layers.Dense(100, activation="relu"),
