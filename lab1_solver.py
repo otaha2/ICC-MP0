@@ -3,6 +3,10 @@ import numpy as np
 import random
 import sys
 from functools import reduce
+
+import warnings
+warnings.filterwarnings('ignore',category=FutureWarning)
+
 import tensorflow as tf
 import initializeX
 import lossFunction
