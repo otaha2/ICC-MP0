@@ -44,7 +44,11 @@ if __name__ == "__main__":
 	# Fit Model on Training Data
 	model.fit(train_images, train_labels, epochs=10)
 
+	model.save('keras_fashion_mnist_model.h5')
+	model.save_weights('./checkpoints/end_checkpoint')
+
 	# Evaluate model on test data
 	test_loss, test_acc = model.evaluate(test_images, test_labels, verbose=2)
 
 	print('\nTest accuracy:', test_acc)
+
