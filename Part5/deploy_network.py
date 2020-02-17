@@ -56,17 +56,35 @@ if __name__ == "__main__":
 	# Create model & load weights
 	model = create_model()
 	model.load_weights('../Part4/checkpoints/end_checkpoint')
-	# model.summary()
-	
+
+	saver = tf.train.Saver()
+	# saver.restore(sess, '../Part4/low_level_cnn_model')
+
+	imported_graph = tf.train.import_meta_graph('../Part4/low_level_cnn_model-250.meta')
+	graph = tf.get_default_graph()
+	X = graph.get_tensor_by_name('input_images:0')
+	keep_prob = graph.get_tensor_by_name('dropout_placeholder:0')
+	prediction = graph.get_tensor_by_name('prediction:0')
+
+
+
 	# Send post request for data
 	data, testset_id = get_testset()
 	data = np.reshape(data, (1000, 28, 28, 1))
 	
 	# Predict labels with model
-	preds = model.predict(data)
+	preds_keras = model.predict(data)
+
+	# with tf.Session() as sess:
+	# 	imported_graph.restore(sess, '../Part4/low_level_cnn_model-250')
+	# 	feed_dict = {X: data.reshape(1000, 784), keep_prob: 1.0}
+	# 	preds = sess.run(prediction, feed_dict)
+	# 	print(preds)
+
+	
 	
 	# Construct pred string
-	for pred in preds:
+	for pred in preds_keras:
 		predStr += str(np.argmax(pred))
 	
 	# Send results

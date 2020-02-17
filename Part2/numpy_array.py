@@ -39,4 +39,10 @@ if __name__ == "__main__":
 	index = np.abs(f - 0.25).argmin()
 	closest_val = f[index]
 
-	print(closest_val)
+	print("A: \n", a)
+	print("B: \n", b)
+	print("C: \n", c)
+	print("D: \n", d)
+	print("E: \n", e)
+	print("F: \n", f)
+	print("Result: ", closest_val)
