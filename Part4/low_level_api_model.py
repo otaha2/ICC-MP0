@@ -20,8 +20,8 @@ def maxpool2d(x, k=2, padding='VALID'):
 def conv_net(x, weights, biases, dropout):
 	x = tf.reshape(x, shape=[-1, 28, 28, 1])
 
-	conv1 = conv2d(x, weights['wc1'], biases['bc1'], padding='SAME')
-	conv1 = maxpool2d(conv1, k=2, padding='SAME')
+	conv1 = conv2d(x, weights['wc1'], biases['bc1'], padding='VALID')
+	conv1 = maxpool2d(conv1, k=2, padding='VALID')
 
 	conv2 = conv2d(conv1, weights['wc2'], biases['bc2'], padding='SAME')
 	conv2 = maxpool2d(conv2, k=2, padding='SAME')
@@ -29,9 +29,13 @@ def conv_net(x, weights, biases, dropout):
 	fc1 = tf.reshape(conv2, [-1, weights['wd1'].get_shape().as_list()[0]])
 	fc1 = tf.add(tf.matmul(fc1, weights['wd1']), biases['bd1'])
 	fc1 = tf.nn.relu(fc1)
-	fc1 = tf.nn.dropout(fc1, dropout)
+	# fc1 = tf.nn.dropout(fc1, dropout)
 
-	out = tf.add(tf.matmul(fc1, weights['out']), biases['out'])
+	fc2 = tf.add(tf.matmul(fc1, weights['wd2']), biases['bd2'])
+	fc2 = tf.nn.relu(fc2)
+	fc2 = tf.nn.dropout(fc2, dropout)
+
+	out = tf.add(tf.matmul(fc2, weights['outw']), biases['outb'])
 
 	return out
 
@@ -40,14 +44,15 @@ if __name__ == "__main__":
 	mnist = input_data.read_data_sets('data/fasion', one_hot=True)
 
 	learning_rate = 0.002
-	num_steps = 250
+	num_steps = 500
 	batch_size = 256
 	display_step = 10
 
 	num_input = 784
 	num_classes = 10
 	dropout = 0.75
-	epochs = 3
+
+	num_epoch_steps = int(60000 / batch_size)
 
 	loss_val = []
 
@@ -56,19 +61,19 @@ if __name__ == "__main__":
 	keep_prob = tf.placeholder(tf.float32, name='dropout_placeholder') # dropout (keep probability)
 
 	weights = {
-		'wc1': tf.Variable(tf.random_normal([5, 5, 1, 32])),
-		'wc2': tf.Variable(tf.random_normal([5, 5, 32, 64])),
-		'wd1': tf.Variable(tf.random_normal([7*7*64, 1024])),
-		# 'wd2': tf.Variable(tf.random_normal([100, 50])),
-		'out': tf.Variable(tf.random_normal([1024, num_classes]))
+		'wc1': tf.get_variable('wc1', shape=(5, 5, 1, 3), initializer=tf.contrib.layers.xavier_initializer()),
+		'wc2': tf.get_variable('wc2', shape=(3, 3, 3, 3), initializer=tf.contrib.layers.xavier_initializer()),
+		'wd1': tf.get_variable('wd1', shape=(6*6*3, 100), initializer=tf.contrib.layers.xavier_initializer()),
+		'wd2': tf.get_variable('wd2', shape=(100, 50), initializer=tf.contrib.layers.xavier_initializer()),
+		'outw': tf.get_variable('outw', shape=(50, num_classes), initializer=tf.contrib.layers.xavier_initializer()),
 	}
 
 	biases = {
-		'bc1': tf.Variable(tf.random_normal([32])),
-		'bc2': tf.Variable(tf.random_normal([64])),
-		'bd1': tf.Variable(tf.random_normal([1024])),
-		# 'bd2': tf.Variable(tf.random_normal([50])),
-		'out': tf.Variable(tf.random_normal([num_classes]))
+		'bc1': tf.get_variable('bc1', shape=(3), initializer=tf.zeros_initializer()),
+		'bc2': tf.get_variable('bc2', shape=(3), initializer=tf.zeros_initializer()),
+		'bd1': tf.get_variable('bd1', shape=(100), initializer=tf.zeros_initializer()),
+		'bd2': tf.get_variable('bd2', shape=(50), initializer=tf.zeros_initializer()),
+		'outb': tf.get_variable('outb', shape=(num_classes), initializer=tf.zeros_initializer()),
 	}
 
 	# Construct model
@@ -94,22 +99,20 @@ if __name__ == "__main__":
 	with tf.compat.v1.Session() as sess:
 		sess.run(init)
 
-		# for epoch in range(epochs):
-			# print("\nEpoch #", epoch)
 		for step in range(1, num_steps+1):
 			batch_x, batch_y = mnist.train.next_batch(batch_size)
 
 			sess.run(train_op, feed_dict={X: batch_x, Y: batch_y, keep_prob: dropout})
-			if step % display_step == 0 or step == 1:
+			if step % display_step == 0 or step == 1 or step % num_epoch_steps == 0:
 				loss, acc = sess.run([loss_op, accuracy], 
 					feed_dict={X: batch_x, Y: batch_y, keep_prob: 1.0})
-				# if step == 1:
-				# 	loss_val.append(loss)
+				if step % display_step == 0 or step == 1:
+					print("Step " + str(step) + ", Minibatch Loss= " + \
+	                  "{:.4f}".format(loss) + ", Training Accuracy= " + \
+	                  "{:.3f}".format(acc))
 
-				print("Step " + str(step) + ", Minibatch Loss= " + \
-                  "{:.4f}".format(loss) + ", Training Accuracy= " + \
-                  "{:.3f}".format(acc))
-			loss_val.append(loss)
+				if step % num_epoch_steps == 0 or step == 1:
+					loss_val.append(loss)
 
 		saved_path = saver.save(sess, './low_level_cnn_model', global_step=step)
 
@@ -121,8 +124,8 @@ if __name__ == "__main__":
 										keep_prob: 1.0})
 			)
 
-		
-
+	print(loss_val)
+	
 	plt.plot(loss_val)
 	plt.title('Low Level API Model loss')
 	plt.ylabel('Loss')

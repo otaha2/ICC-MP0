@@ -9,27 +9,6 @@ import gzip
 
 url = 'https://courses.engr.illinois.edu/ece498icc/sp2020/lab1_request_dataset.php'
 
-def create_model():
-	input_shape = (28, 28, 1)
-	model = keras.Sequential([
-		keras.layers.Conv2D(3, (5,5), strides=(1,1), padding="valid", activation="relu", input_shape=input_shape),
-		keras.layers.MaxPooling2D((2,2)),
-		keras.layers.Conv2D(3, (3,3), strides=(1,1), padding="same", activation="relu"),
-		keras.layers.MaxPooling2D((2,2)),
-		keras.layers.Flatten(),
-		keras.layers.Dense(100, activation="relu"),
-		keras.layers.Dense(50, activation="relu"),
-		keras.layers.Dense(10, activation="softmax")
-	])
-
-	# Compile Model
-	model.compile(optimizer='adam',
-		loss=tf.keras.losses.SparseCategoricalCrossentropy(),
-		metrics=['accuracy']
-	)
-	
-	return model
-
 def load_dataset(path):
     num_img = 1000
     with gzip.open(path, 'rb') as infile:
@@ -53,39 +32,19 @@ def send_results(pred, testset_id):
 if __name__ == "__main__":
 	predStr = ""
 	
-	# Create model & load weights
-	model = create_model()
-	model.load_weights('../Part4/checkpoints/end_checkpoint')
-
-	saver = tf.train.Saver()
-	# saver.restore(sess, '../Part4/low_level_cnn_model')
-
-	imported_graph = tf.train.import_meta_graph('../Part4/low_level_cnn_model-250.meta')
-	graph = tf.get_default_graph()
-	X = graph.get_tensor_by_name('input_images:0')
-	keep_prob = graph.get_tensor_by_name('dropout_placeholder:0')
-	prediction = graph.get_tensor_by_name('prediction:0')
-
-
+	new_model = tf.keras.models.load_model('../Part4/keras_fashion_mnist_model.h5')
 
 	# Send post request for data
 	data, testset_id = get_testset()
+	data = data / 255.0
 	data = np.reshape(data, (1000, 28, 28, 1))
 	
 	# Predict labels with model
-	preds_keras = model.predict(data)
+	preds = new_model.predict_classes(data)
 
-	# with tf.Session() as sess:
-	# 	imported_graph.restore(sess, '../Part4/low_level_cnn_model-250')
-	# 	feed_dict = {X: data.reshape(1000, 784), keep_prob: 1.0}
-	# 	preds = sess.run(prediction, feed_dict)
-	# 	print(preds)
-
-	
-	
 	# Construct pred string
-	for pred in preds_keras:
-		predStr += str(np.argmax(pred))
+	for pred in preds:
+		predStr += str(pred)
 	
 	# Send results
 	num_correct = send_results(predStr, testset_id)
