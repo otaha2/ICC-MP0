@@ -53,6 +53,9 @@ if __name__ == "__main__":
 	num_input = 784
 	num_classes = 10
 	dropout = 0.75
+	epochs = 5
+
+	loss_val = []
 
 	X = tf.placeholder(tf.float32, [None, num_input])
 	Y = tf.placeholder(tf.float32, [None, num_classes])
@@ -95,19 +98,20 @@ if __name__ == "__main__":
 	with tf.compat.v1.Session() as sess:
 		sess.run(init)
 
-		for step in range(1, num_steps+1):
-			batch_x, batch_y = mnist.train.next_batch(batch_size)
-			# print('batch_x: ', str(batch_x))
-			# print('batch_y: ', str(batch_y))
+		for epoch in range(epochs):
+			print("\nEpoch #", epoch)
+			for step in range(1, num_steps+1):
+				batch_x, batch_y = mnist.train.next_batch(batch_size)
 
-			sess.run(train_op, feed_dict={X: batch_x, Y: batch_y, keep_prob: dropout})
-			if step % display_step == 0 or step == 1:
-				loss, acc = sess.run([loss_op, accuracy], 
-					feed_dict={X: batch_x, Y: batch_y, keep_prob: 1.0})
+				sess.run(train_op, feed_dict={X: batch_x, Y: batch_y, keep_prob: dropout})
+				if step % display_step == 0 or step == 1:
+					loss, acc = sess.run([loss_op, accuracy], 
+						feed_dict={X: batch_x, Y: batch_y, keep_prob: 1.0})
 
-				print("Step " + str(step) + ", Minibatch Loss= " + \
-                  "{:.4f}".format(loss) + ", Training Accuracy= " + \
-                  "{:.3f}".format(acc))
+					print("Step " + str(step) + ", Minibatch Loss= " + \
+	                  "{:.4f}".format(loss) + ", Training Accuracy= " + \
+	                  "{:.3f}".format(acc))
+			loss_val.append(loss)
 
 		print("Optimization Finished!")
 
@@ -116,6 +120,12 @@ if __name__ == "__main__":
 										Y: mnist.test.labels[:256],
 										keep_prob: 1.0})
 			)
+
+	plt.plot(loss_val)
+	plt.title('Low Level API Model loss')
+	plt.ylabel('Loss')
+	plt.xlabel('Epoch')
+	plt.show()
 
 
 

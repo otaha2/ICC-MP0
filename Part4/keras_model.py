@@ -25,7 +25,8 @@ if __name__ == "__main__":
 
 	# Build Model
 	model = keras.Sequential([
-		keras.layers.Conv2D(3, (5,5), strides=(1,1), padding="valid", activation="relu", input_shape=input_shape),
+		keras.layers.Conv2D(3, (5,5), strides=(1,1), padding="valid", activation="relu", input_shape=input_shape 
+			), # kernel_initializer=tf.keras.initializers.GlorotNormal
 		keras.layers.MaxPooling2D((2,2)),
 		keras.layers.Conv2D(3, (3,3), strides=(1,1), padding="same", activation="relu"),
 		keras.layers.MaxPooling2D((2,2)),
@@ -42,7 +43,7 @@ if __name__ == "__main__":
 	)
 
 	# Fit Model on Training Data
-	model.fit(train_images, train_labels, epochs=10)
+	history = model.fit(train_images, train_labels, batch_size=32, epochs=5) #, validation_split=0.33
 
 	model.save('keras_fashion_mnist_model.h5')
 	model.save_weights('./checkpoints/end_checkpoint')
@@ -51,4 +52,11 @@ if __name__ == "__main__":
 	test_loss, test_acc = model.evaluate(test_images, test_labels, verbose=2)
 
 	print('\nTest accuracy:', test_acc)
+
+	# Plot training & validation loss values
+	plt.plot(history.history['loss'])
+	plt.title('Keras Model loss')
+	plt.ylabel('Loss')
+	plt.xlabel('Epoch')
+	plt.show()
 
