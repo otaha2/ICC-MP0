@@ -111,22 +111,26 @@ if __name__ == "__main__":
 	                  "{:.4f}".format(loss) + ", Training Accuracy= " + \
 	                  "{:.3f}".format(acc))
 
-				if step % num_epoch_steps == 0 or step == 1:
-					loss_val.append(loss)
+			loss_val.append(loss)
 
 		saved_path = saver.save(sess, './low_level_cnn_model', global_step=step)
 
 		print("Optimization Finished!")
 
 		print("Testing Accuracy:", \
-			sess.run(accuracy, feed_dict={X: mnist.test.images[:256],
-										Y: mnist.test.labels[:256],
+			sess.run(accuracy, feed_dict={X: mnist.test.images,
+										Y: mnist.test.labels,
 										keep_prob: 1.0})
 			)
 
-	print(loss_val)
+	# print(loss_val)
+	# construct X axis array
+	x_axis = []
+	for i, elem in enumerate(loss_val):
+		x_axis.append(i / num_epoch_steps)
 	
-	plt.plot(loss_val)
+	# print(x_axis)
+	plt.plot(x_axis, loss_val)
 	plt.title('Low Level API Model loss')
 	plt.ylabel('Loss')
 	plt.xlabel('Epoch')
