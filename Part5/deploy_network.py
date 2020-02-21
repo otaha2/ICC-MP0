@@ -30,26 +30,27 @@ def send_results(pred, testset_id):
 	return r.text
 
 if __name__ == "__main__":
-	predStr = ""
 	
 	new_model = tf.keras.models.load_model('../Part4/keras_fashion_mnist_model.h5')
 
-	# Send post request for data
-	data, testset_id = get_testset()
-	data = data / 255.0
-	data = np.reshape(data, (1000, 28, 28, 1))
-	
-	# Predict labels with model
-	preds = new_model.predict_classes(data)
+	for i in range(5):
+		# Send post request for data
+		predStr = ""
+		data, testset_id = get_testset()
+		data = data / 255.0
+		data = np.reshape(data, (1000, 28, 28, 1))
+		
+		# Predict labels with model
+		preds = new_model.predict_classes(data)
 
-	# Construct pred string
-	for pred in preds:
-		predStr += str(pred)
-	
-	# Send results
-	num_correct = send_results(predStr, testset_id)
-	
-	# Report Accuracy
-	acc = int(num_correct)/1000.0
-	print("\nAccuracy: ", acc)
-	
+		# Construct pred string
+		for pred in preds:
+			predStr += str(pred)
+		
+		# Send results
+		num_correct = send_results(predStr, testset_id)
+		
+		# Report Accuracy
+		acc = int(num_correct)/1000.0
+		print("Testset ID: ",testset_id , " Accuracy: ", acc)
+		
